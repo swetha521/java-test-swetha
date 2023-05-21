@@ -14,7 +14,7 @@ This project implements a REST API using Spring Boot to facilitate board room bo
 1. Clone the repository:
 
    ```shell
-   git clone https://github.com/your-username/spring-boot-rest-api.git
+   git clone https://github.com/swetha521/java-test-swetha.git
    ```
 
 2. Navigate to the project directory:
