@@ -58,7 +58,7 @@ class BookingControllerITest {
             fail();
         } catch (HttpClientErrorException exception) {
             assertEquals(exception.getStatusCode(), HttpStatus.BAD_REQUEST);
-            assertEquals("", exception.getMessage());
+            assertEquals("400 : [{\"message\":\"Request payload has insufficient/invalid data for processing. Minimum number of lines expected is 3\"}]", exception.getMessage());
         }
     }
 

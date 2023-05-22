@@ -5,6 +5,7 @@ import com.lbg.boardroom.bookings.model.Meeting;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,18 +20,20 @@ import java.util.stream.Collectors;
 public class BookingProcessor {
 
     public Map<LocalDate, List<Meeting>> processBookingRequest(final BookingRequest bookingRequest) {
-        bookingRequest.getMeetings().sort(Comparator.comparing(Meeting::getStartTime));
         Set<Meeting> meetings = findNonOverlappingMeetings(bookingRequest);
-        return meetings.stream().collect(Collectors.groupingBy(meeting -> meeting.getStartTime().toLocalDate(), TreeMap::new, Collectors.toList()));
+        return meetings.stream()
+                .collect(Collectors.groupingBy(meeting -> meeting.getStartTime().toLocalDate(), LinkedHashMap::new, Collectors.toList()));
     }
 
     private Set<Meeting> findNonOverlappingMeetings(BookingRequest bookingRequest) {
-        Set<Meeting> meetingsWithoutOverlap = new HashSet<>();
+        TreeSet<Meeting> meetingsWithoutOverlap = new TreeSet<>(Comparator.comparing(Meeting::getStartTime));
         Meeting previousMeeting = null;
-        for (Meeting meeting : bookingRequest.getMeetings()) {
-            if (isMeetingWithinOfficeHours(bookingRequest.getOfficeStartTime(), bookingRequest.getOfficeEndTime(), meeting)) {
-                if (previousMeeting != null && (meeting.getStartTime().isBefore(previousMeeting.getMeetingEndTime()))) {
+        LocalTime officeStartTime = bookingRequest.getOfficeStartTime();
+        LocalTime officeEndTime = bookingRequest.getOfficeEndTime();
 
+        for (Meeting meeting : bookingRequest.getMeetings()) {
+            if (isMeetingWithinOfficeHours(officeStartTime, officeEndTime, meeting)) {
+                if (previousMeeting != null && meeting.getStartTime().isBefore(previousMeeting.getMeetingEndTime())) {
                     if (meeting.getRequestDateTime().isBefore(previousMeeting.getRequestDateTime())) {
                         meetingsWithoutOverlap.remove(previousMeeting);
                         meetingsWithoutOverlap.add(meeting);
@@ -45,6 +48,8 @@ public class BookingProcessor {
     }
 
     private boolean isMeetingWithinOfficeHours(LocalTime officeStartTime, LocalTime officeEndTime, Meeting meeting) {
-        return !meeting.getStartTime().toLocalTime().isBefore(officeStartTime) && !meeting.getMeetingEndTime().toLocalTime().isAfter(officeEndTime);
+        LocalDateTime startDateTime = meeting.getStartTime();
+        LocalDateTime endDateTime = meeting.getMeetingEndTime();
+        return !startDateTime.toLocalTime().isBefore(officeStartTime) && !endDateTime.toLocalTime().isAfter(officeEndTime);
     }
 }
