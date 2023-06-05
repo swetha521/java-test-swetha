@@ -30,18 +30,19 @@ public class BookingProcessor {
         Meeting previousMeeting = null;
         LocalTime officeStartTime = bookingRequest.getOfficeStartTime();
         LocalTime officeEndTime = bookingRequest.getOfficeEndTime();
-
+        bookingRequest.getMeetings().sort(Comparator.comparing(Meeting::getStartTime));
         for (Meeting meeting : bookingRequest.getMeetings()) {
             if (isMeetingWithinOfficeHours(officeStartTime, officeEndTime, meeting)) {
                 if (previousMeeting != null && meeting.getStartTime().isBefore(previousMeeting.getMeetingEndTime())) {
                     if (meeting.getRequestDateTime().isBefore(previousMeeting.getRequestDateTime())) {
                         meetingsWithoutOverlap.remove(previousMeeting);
                         meetingsWithoutOverlap.add(meeting);
+                        previousMeeting = meeting;
                     }
                 } else {
                     meetingsWithoutOverlap.add(meeting);
+                    previousMeeting = meeting;
                 }
-                previousMeeting = meeting;
             }
         }
         return meetingsWithoutOverlap;
